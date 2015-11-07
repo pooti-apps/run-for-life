@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">RunForLife</string>
     <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello World</string>
+    <string name="Distance">Distance</string>
+    <string name="distance_val">Enter the distance</string>
+    <string name="run_btn">Run</string>
+
 </resources>
