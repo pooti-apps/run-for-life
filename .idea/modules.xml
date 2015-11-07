@@ -2,8 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/RunForLife.iml" filepath="$PROJECT_DIR$/RunForLife.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/libs/libs.iml" filepath="$PROJECT_DIR$/app/libs/libs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/run-for-life.iml" filepath="$PROJECT_DIR$/run-for-life.iml" />
     </modules>
   </component>
 </project>

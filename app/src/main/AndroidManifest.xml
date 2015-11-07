@@ -24,6 +24,17 @@
         <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
         <uses-permission android:name="android.permission.INTERNET"/>
         <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+
+        <service
+            android:name="com.here.android.mpa.service.MapService"
+            android:label="HereMapService"
+            android:process="global.Here.Map.Service.v2"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="com.here.android.mpa.service.MapService" >
+                </action>
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
