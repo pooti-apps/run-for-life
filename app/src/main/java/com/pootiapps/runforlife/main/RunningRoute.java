@@ -17,9 +17,7 @@ import java.util.List;
  */
 
 
-public class RunForLife {
-    private Map map = null;
-    private MapFragment mapFragment = null;
+public class RunningRoute {
     private BoundingBox boundingBox = new BoundingBox();
 
     public java.util.Map<DirectionEnum,List<GeoCoordinate>> getRunningRoute(GeoCoordinate geoCoordinate, double distance){

@@ -25,9 +25,9 @@
         <uses-permission android:name="android.permission.INTERNET"/>
         <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 
-        <meta-data android:name="com.here.android.maps.appid" android:value="NUsdHhqqv5K3HGhWIPNp"/>
-        <meta-data android:name="com.here.android.maps.apptoken" android:value=" 7dQZbnzlVvGpGZMdrp5Idg"/>
-        <meta-data android:name="com.here.android.maps.license.key" android:value="eEXQgX3pciq4mINThb4H3yJjY8ypcHhmE7/02nq/c7ih+x4TbqjXY8/NSBY+XWO4vQy2KN/XgOGpbTwpfss8ckvuEoGNstfPaMYRqOImXpVaUr4KBzW+S2p63OPi4FsLi4hxYI/VJy8B2pmODMhZO+bXJp4cTEvvEd/I6SFZt2dIxsYnqRchxkXPzOb+gzWQbCq/oVfNkcTdJjLqdPYG2sXGQebgvUAsmrbpd/JUhhWWJi+ym0N+A7opWWWrRR9x0QjDCRcpJ30AfzYugf3TnlprmUlHOnLrD3M6xTWVzpR1C6X864P4QPmYhmeJc3g0OIA0Qz/qpJIpOMxtt7wkGjzrzuVxxxYNbdwpvQoE8xzhvNJjjnhGCymFFgFQlr064YrsM1QXRJfvFqwBCAwZjxfBxqBUHj/gIHHwK4HaO9YnjkmlTg0mmdulcehSDRvnnwU3NZHo9x3Jljc6fZeuo6I3/dfesgGLA8/cqWB1nhZMzGsGgvD3B29V06Wl+kLvrQ0KyEUlK87hmw61nanpO/b+lt6YtW3UhAh3No4tRFqoJC4XijdB0gFCLxxg6FDMW4F53Fwce92eizsI+9dLVcTC2amuE9zTlFNY2BYmV3KKVhonXC1zzmkNqzSVHdZ7UQo347OepjptOYIdyC44rPS8LpgOZzxYB+twuZJFxoM="/>
+        <meta-data android:name="com.here.android.maps.appid" android:value="rKmmWwTDdJhTSN6DjL5G"/>
+        <meta-data android:name="com.here.android.maps.apptoken" android:value=" 5lsx2054Z4HzOOlx-6THDQ"/>
+        <meta-data android:name="com.here.android.maps.license.key" android:value="LiaTI830/J1cUmk4nxOUwDoBYLL9yTEAbbY1nlx4GHTn652+6meaTosXuvjfTYVSfq0V0ckCe4Q+8FjYRPSYYJGD0IaxuN7HCq92BS1Ra6q6UonOYmwfBdg0h7Mjjnxf/EjRcycYuc33ierDh3w3ITr2klglAGKpb0lAG0ECVLngJaJL/I9grTnvQgHr5iEUEDYpFMmZqmZYfNRBcNzeroYg20HU2480VKVTt1HS5Hi5dXvzOmksRG0Y1KdDb4OZ5O7lO/qCovpLMTLA6Ab6V+lWa8sQFFw7+drVN/2DyZYmsezoJjnoa0F2NXI44tCzeU9F1WzEGPp52N6BKsmIcmVIiyPaA50gLEE4BYkBtDCXEPYu9Iln8/Exru6Qnu2hXyU7HcnsWh5ksvot+Lpp/ST73bETmoiDl0iEf299u7Am1WJjCXcZEYph/UQVGoU2kdEdQQHuydIEkteERU73x0Al4b90L7sErOPtxhd50C3e/P59F+NUkiMPSUPOPjTyTpqJ66QIDpGQElwF8vruvFwsr3BfWjbW8o3ZTWXC26V/rIjBvZJ6TxL/iDk5KNkbf55kjwqSjPPi8CzIIzKUM237ttCMBfH8ynxgIV49DlwQ7jGYMnKsPOUKBEqp3OpM54YV0REFWx1KczdpVH3j4ANMMVWPNfW5ufqKInhycd0="/>
 
 
         <service
