@@ -25,6 +25,11 @@
         <uses-permission android:name="android.permission.INTERNET"/>
         <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 
+        <meta-data android:name="com.here.android.maps.appid" android:value="NUsdHhqqv5K3HGhWIPNp"/>
+        <meta-data android:name="com.here.android.maps.apptoken" android:value=" 7dQZbnzlVvGpGZMdrp5Idg"/>
+        <meta-data android:name="com.here.android.maps.license.key" android:value="eEXQgX3pciq4mINThb4H3yJjY8ypcHhmE7/02nq/c7ih+x4TbqjXY8/NSBY+XWO4vQy2KN/XgOGpbTwpfss8ckvuEoGNstfPaMYRqOImXpVaUr4KBzW+S2p63OPi4FsLi4hxYI/VJy8B2pmODMhZO+bXJp4cTEvvEd/I6SFZt2dIxsYnqRchxkXPzOb+gzWQbCq/oVfNkcTdJjLqdPYG2sXGQebgvUAsmrbpd/JUhhWWJi+ym0N+A7opWWWrRR9x0QjDCRcpJ30AfzYugf3TnlprmUlHOnLrD3M6xTWVzpR1C6X864P4QPmYhmeJc3g0OIA0Qz/qpJIpOMxtt7wkGjzrzuVxxxYNbdwpvQoE8xzhvNJjjnhGCymFFgFQlr064YrsM1QXRJfvFqwBCAwZjxfBxqBUHj/gIHHwK4HaO9YnjkmlTg0mmdulcehSDRvnnwU3NZHo9x3Jljc6fZeuo6I3/dfesgGLA8/cqWB1nhZMzGsGgvD3B29V06Wl+kLvrQ0KyEUlK87hmw61nanpO/b+lt6YtW3UhAh3No4tRFqoJC4XijdB0gFCLxxg6FDMW4F53Fwce92eizsI+9dLVcTC2amuE9zTlFNY2BYmV3KKVhonXC1zzmkNqzSVHdZ7UQo347OepjptOYIdyC44rPS8LpgOZzxYB+twuZJFxoM="/>
+
+
         <service
             android:name="com.here.android.mpa.service.MapService"
             android:label="HereMapService"
