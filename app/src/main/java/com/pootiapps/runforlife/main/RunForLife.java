@@ -9,6 +9,9 @@ import com.here.android.mpa.routing.RouteOptions;
 import com.here.android.mpa.routing.RoutePlan;
 import com.here.android.mpa.routing.RouteResult;
 
+import java.util.HashMap;
+import java.util.List;
+
 /**
  * Created by ksingh on 11/7/2015.
  */
@@ -17,16 +20,20 @@ import com.here.android.mpa.routing.RouteResult;
 public class RunForLife {
     private Map map = null;
     private MapFragment mapFragment = null;
+    private BoundingBox boundingBox = new BoundingBox();
 
-    public java.util.Map<DirectionEnum,MapRoute> getRunningRoute(GeoCoordinate geoCoordinate){
-        return getRunningRoute(geoCoordinate,DirectionEnum.NE);
+    public java.util.Map<DirectionEnum,List<GeoCoordinate>> getRunningRoute(GeoCoordinate geoCoordinate, double distance){
+        return getRunningRoute(geoCoordinate,distance,DirectionEnum.NE);
     }
 
-    public java.util.Map<DirectionEnum,MapRoute> getNextRunningRoute(GeoCoordinate geoCoordinate, DirectionEnum directionEnum){
-        return getRunningRoute(geoCoordinate,directionEnum.next());
+    public java.util.Map<DirectionEnum,List<GeoCoordinate>> getNextRunningRoute(GeoCoordinate geoCoordinate, double distance, DirectionEnum directionEnum){
+        return getRunningRoute(geoCoordinate,distance,directionEnum.next());
     }
 
-    public java.util.Map<DirectionEnum,MapRoute> getRunningRoute(GeoCoordinate geoCoordinate, DirectionEnum directionEnum){
-        return null;
+    public java.util.Map<DirectionEnum,List<GeoCoordinate>> getRunningRoute(GeoCoordinate geoCoordinate, double distance, DirectionEnum directionEnum){
+        List<GeoCoordinate> geoCoordinateList = boundingBox.getBoundingBox(geoCoordinate,distance,directionEnum);
+        java.util.Map<DirectionEnum,List<GeoCoordinate>> runningMap = new HashMap<DirectionEnum,List<GeoCoordinate>>();
+        runningMap.put(directionEnum,geoCoordinateList);
+        return runningMap;
     }
 }

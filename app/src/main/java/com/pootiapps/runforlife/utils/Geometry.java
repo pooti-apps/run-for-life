@@ -10,17 +10,17 @@ public class Geometry {
     private static double MINUTES_TO_METERS = 1852d;
     private static double DEGREE_TO_MINUTES = 60d;
 
-    private double ToRadians(double degrees)
+    private double toRadians(double degrees)
     {
         return (Math.PI / 180) * degrees;
     }
 
-    private double ToDegrees(double radians)
+    private double toDegrees(double radians)
     {
         return (180 / Math.PI) * radians;
     }
 
-    public double Distance(GeoCoordinate g1, GeoCoordinate g2)
+    public double getDistance(GeoCoordinate g1, GeoCoordinate g2)
     {
         double distance = 0;
         double lat1 = g1.getLatitude();
@@ -29,11 +29,11 @@ public class Geometry {
         double lng2 = g2.getLongitude();
 
         // conversion to radians
-        lat1 = ToRadians(lat1);
-        lng1 = ToRadians(lng1);
+        lat1 = toRadians(lat1);
+        lng1 = toRadians(lng1);
 
-        lat2 = ToRadians(lat2);
-        lng2 = ToRadians(lng2);
+        lat2 = toRadians(lat2);
+        lng2 = toRadians(lng2);
 
         double dlat = lat2 - lat1;
         double dlng = lng2 - lng1;
@@ -48,7 +48,7 @@ public class Geometry {
         return distance;
     }
 
-    public GeoCoordinate MidPoint(GeoCoordinate g1, GeoCoordinate g2)
+    public GeoCoordinate getMidPoint(GeoCoordinate g1, GeoCoordinate g2)
     {
         double lat1 = g1.getLatitude();
         double lat2 = g2.getLatitude();
@@ -56,11 +56,11 @@ public class Geometry {
         double lng2 = g2.getLongitude();
 
         // conversion to radians
-        lat1 = ToRadians(lat1);
-        lng1 = ToRadians(lng1);
+        lat1 = toRadians(lat1);
+        lng1 = toRadians(lng1);
 
-        lat2 = ToRadians(lat2);
-        lng2 = ToRadians(lng2);
+        lat2 = toRadians(lat2);
+        lng2 = toRadians(lng2);
 
         double dlat = lat2 - lat1;
         double dlng = lng2 - lng1;
@@ -72,20 +72,33 @@ public class Geometry {
                         bY * bY));
         double lng = lng1 + Math.atan2(bY, Math.cos(lat1) + bX);
 
-        return new GeoCoordinate(ToDegrees(lat),ToDegrees(lng));
+        return new GeoCoordinate(toDegrees(lat),toDegrees(lng));
     }
 
-    public GeoCoordinate Extrapolate(GeoCoordinate g1, double course, double distance)
+    public GeoCoordinate extrapolate(GeoCoordinate g1, double course, double distance)
     {
-        double crs = ToRadians(course);
-        double dist = ToRadians(distance / MINUTES_TO_METERS / DEGREE_TO_MINUTES);
-        double lat1 = ToRadians(g1.getLatitude());
-        double long1 = ToRadians(g1.getLongitude());
+        double crs = toRadians(course);
+        double dist = toRadians(distance / MINUTES_TO_METERS / DEGREE_TO_MINUTES);
+        double lat1 = toRadians(g1.getLatitude());
+        double long1 = toRadians(g1.getLongitude());
 
         double lat = Math.asin(Math.sin(lat1) * Math.cos(dist) + Math.cos(lat1) * Math.sin(dist) * Math.cos(crs));
         double lng = Math.atan2(Math.sin(crs) * Math.sin(dist) * Math.cos(lat1), Math.cos(dist) - Math.sin(lat1) * Math.sin(lat));
         lng = ((long1 + lng + Math.PI) % (2 * Math.PI)) - Math.PI;
 
-        return new GeoCoordinate(ToDegrees(lat),ToDegrees(lng));
+        return new GeoCoordinate(toDegrees(lat),toDegrees(lng));
+    }
+
+    public double getCourse(GeoCoordinate g1, GeoCoordinate g2)
+    {
+        double course = 0;
+        double lat1 = toRadians(g1.getLatitude());
+        double lat2 = toRadians(g2.getLatitude());
+        double long2 = toRadians(g2.getLongitude());
+
+        course = Math.acos((Math.sin(lat1) - Math.sin(lat2) * Math.cos(long2)) / (Math.sin(long2) * Math.cos(lat2)));
+        course = toDegrees(course);
+
+        return course;
     }
 }
