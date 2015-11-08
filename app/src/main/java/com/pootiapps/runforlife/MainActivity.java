@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private DirectionEnum directionEnum;
 
     private SimpleLocation location;
+    private boolean paused;
 
     private NavigationManager navigationManager = null;
     private List<Maneuver> maneuverList = null;
@@ -98,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
             SimpleLocation.openSettings(this);
         }
 
-        Toast.makeText(this,location.getLatitude()+", "+location.getLongitude(),Toast.LENGTH_LONG).show();
+        Toast.makeText(this, location.getLatitude() + ", " + location.getLongitude(), Toast.LENGTH_LONG).show();
 
         // Search for the map fragment to finish setup by calling init().
         mapFragment = (MapFragment)getFragmentManager().findFragmentById(
@@ -119,6 +120,11 @@ public class MainActivity extends AppCompatActivity {
                     map.setZoomLevel(
                             (map.getMaxZoomLevel() + map.getMinZoomLevel()) / 2);
 
+                    map.getPositionIndicator().setVisible(true);
+                    PositioningManager.getInstance().addListener(
+                            new WeakReference<PositioningManager.OnPositionChangedListener>(positionListener));
+                    paused = false;
+                    PositioningManager.getInstance().start(PositioningManager.LocationMethod.GPS_NETWORK);
 
                 } else {
                     System.out.println("ERROR : " +error.toString());
@@ -129,7 +135,10 @@ public class MainActivity extends AppCompatActivity {
         textViewResult = (TextView) findViewById(R.id.title);
         textViewResult.setText(R.string.textview_routecoordinates_2waypoints);
         directionEnum = DirectionEnum.SE;
+        // Register positioning listener
+
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -198,6 +207,24 @@ public class MainActivity extends AppCompatActivity {
                             String.format(progress.toString()));
                 }
             };
+
+    // Define positioning listener
+    private PositioningManager.OnPositionChangedListener positionListener = new
+            PositioningManager.OnPositionChangedListener() {
+                public void onPositionUpdated(PositioningManager.LocationMethod method,
+                                              GeoPosition position, boolean isMapMatched) {
+                    // set the center only when the app is in the foreground
+                    // to reduce CPU consumption
+                    if (!paused) {
+                        map.setCenter(position.getCoordinate(),
+                                Map.Animation.NONE);
+                    }
+                }
+                public void onPositionFixChanged(PositioningManager.LocationMethod method,
+                                                 PositioningManager.LocationStatus status) {
+                }
+            };
+
 
     public void getNext(View view){
         Toast.makeText(this,"Shuffling",Toast.LENGTH_SHORT).show();
@@ -284,38 +311,83 @@ public class MainActivity extends AppCompatActivity {
         // make the device update its location
         location.beginUpdates();
 
-        // ...
+
     }
 
     @Override
     protected void onPause() {
         // stop location updates (saves battery)
         location.endUpdates();
-
-        // ...
-
+        PositioningManager.getInstance().stop();
+        paused = true;
         super.onPause();
     }
 
-    public void startNavigation(View view){
-        System.out.println(maneuverList.size());
-        if (maneuverList.size()>0){
-            System.out.println("dist to 0" + maneuverList.get(0).getDistanceToNextManeuver());
-            System.out.println("turn to 0" + maneuverList.get(0).getTurn().value());
-            System.out.println("dist to 1" + maneuverList.get(1).getDistanceToNextManeuver());
-            System.out.println("turn to 1" + maneuverList.get(1).getTurn().value());
-            System.out.println("dist to 2" + maneuverList.get(2).getDistanceToNextManeuver());
-            System.out.println("turn to 2" + maneuverList.get(2).getTurn().value());
-            System.out.println("dist to 3" + maneuverList.get(3).getDistanceToNextManeuver());
-            System.out.println("turn to 3" + maneuverList.get(3).getTurn().value());
-            System.out.println("dist to 4" + maneuverList.get(4).getDistanceToNextManeuver());
-            System.out.println("turn to 4" + maneuverList.get(4).getTurn().value());
-            System.out.println("dist to 5" + maneuverList.get(5).getDistanceToNextManeuver());
-            System.out.println("turn to 5" + maneuverList.get(5).getTurn().value());
-            System.out.println("dist to 6" + maneuverList.get(6).getDistanceToNextManeuver());
-            System.out.println("turn to 6" + maneuverList.get(6).getTurn().value());
-            System.out.println("dist to 7" + maneuverList.get(7).getDistanceToNextManeuver());
-            System.out.println("turn to 7" + maneuverList.get(7).getTurn().value());
-        }
+    @Override
+    public void onDestroy(){
+        PositioningManager.getInstance().removeListener(positionListener);
+        navigationManager.stop();
+        map = null;
+        super.onDestroy();
     }
+
+    public void startNavigation(View view){
+        navigationManager = NavigationManager.getInstance();
+
+        if(mapRoute!=null){
+            // start listening to navigation events
+            navigationManager.addNewInstructionEventListener(
+                    new WeakReference<NavigationManager.NewInstructionEventListener>(instructListener));
+            // start listening to position events
+            navigationManager.addPositionListener(
+                    new WeakReference<NavigationManager.PositionListener>(navPositionListener));
+
+            NavigationManager.Error error = navigationManager.startNavigation(mapRoute.getRoute());
+        }
+//        System.out.println(maneuverList.size());
+//        if (maneuverList.size()>0){
+//            System.out.println("dist to 0" + maneuverList.get(0).getDistanceToNextManeuver());
+//            System.out.println("turn to 0" + maneuverList.get(0).getTurn().value());
+//            System.out.println("dist to 1" + maneuverList.get(1).getDistanceToNextManeuver());
+//            System.out.println("turn to 1" + maneuverList.get(1).getTurn().value());
+//            System.out.println("dist to 2" + maneuverList.get(2).getDistanceToNextManeuver());
+//            System.out.println("turn to 2" + maneuverList.get(2).getTurn().value());
+//            System.out.println("dist to 3" + maneuverList.get(3).getDistanceToNextManeuver());
+//            System.out.println("turn to 3" + maneuverList.get(3).getTurn().value());
+//            System.out.println("dist to 4" + maneuverList.get(4).getDistanceToNextManeuver());
+//            System.out.println("turn to 4" + maneuverList.get(4).getTurn().value());
+//            System.out.println("dist to 5" + maneuverList.get(5).getDistanceToNextManeuver());
+//            System.out.println("turn to 5" + maneuverList.get(5).getTurn().value());
+//            System.out.println("dist to 6" + maneuverList.get(6).getDistanceToNextManeuver());
+//            System.out.println("turn to 6" + maneuverList.get(6).getTurn().value());
+//            System.out.println("dist to 7" + maneuverList.get(7).getDistanceToNextManeuver());
+//            System.out.println("turn to 7" + maneuverList.get(7).getTurn().value());
+//        }
+    }
+
+    private NavigationManager.NewInstructionEventListener instructListener
+            = new NavigationManager.NewInstructionEventListener() {
+        @Override
+        public void onNewInstructionEvent() {
+            // Interpret and present the Maneuver object as it contains
+            // turn by turn navigation instructions for the user.
+            navigationManager.getNextManeuver();
+        }
+    };
+    private NavigationManager.PositionListener navPositionListener
+            = new NavigationManager.PositionListener() {
+        @Override
+        public void onPositionUpdated(GeoPosition loc) {
+            // the position we get in this callback can be used
+            // to reposition the map and change orientation.
+            loc.getCoordinate();
+            loc.getHeading();
+            loc.getSpeed();
+            // also remaining time and distance can be
+            // fetched from navigation manager
+            navigationManager.getTimeToArrival(true,
+                    Route.TrafficPenaltyMode.DISABLED);
+            navigationManager.getDestinationDistance();
+        }
+    };
 }
