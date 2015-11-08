@@ -64,10 +64,14 @@
             android:layout_height="match_parent"/>
     </LinearLayout>
 
-    <android.support.design.widget.FloatingActionButton android:id="@+id/navigationBtn"
+    <android.support.design.widget.FloatingActionButton android:id="@+id/startNavigationBtn"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:layout_gravity="bottom|start" android:layout_margin="@dimen/fab_margin"
         android:onClick="startNavigation"/>
+    <android.support.design.widget.FloatingActionButton android:id="@+id/stopNavigationBtn"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start" android:layout_margin="@dimen/fab_margin"
+        android:onClick="stopNavigation"/>
 
     <android.support.design.widget.FloatingActionButton android:id="@+id/shuffleBtn"
         android:layout_width="wrap_content" android:layout_height="wrap_content"

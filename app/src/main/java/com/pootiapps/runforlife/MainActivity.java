@@ -91,8 +91,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.navigationBtn);
+        FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.startNavigationBtn);
         floatingActionButton.setImageResource(R.drawable.maneuver_icon_48);
+        FloatingActionButton floatingActionButton1 = (FloatingActionButton) findViewById(R.id.stopNavigationBtn);
+        floatingActionButton1.setImageResource(R.drawable.hand_stop_palm_512);
+        floatingActionButton1.hide();
 
         Spinner spinner = (Spinner) findViewById(R.id.distanceSpinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,R.array.distance_array,R.layout.support_simple_spinner_dropdown_item);
@@ -316,25 +319,10 @@ public class MainActivity extends AppCompatActivity {
         // make the device update its location
         location.beginUpdates();
 
-        /*ksingh
+        ///*ksingh
         boolean isConnected = PebbleKit.isWatchConnected(this);
         Toast.makeText(this, "Pebble " + (isConnected ? "is" : "is not") + " connected!", Toast.LENGTH_LONG).show();
-        */
-        // Push a notification
-        /*
-        final Intent i = new Intent("com.getpebble.action.SEND_NOTIFICATION");
 
-        final java.util.Map data = new HashMap();
-        data.put("title", "Test Message");
-        data.put("body", "Whoever said nothing was impossible never tried to slam a revolving door.");
-        final JSONObject jsonData = new JSONObject(data);
-        final String notificationData = new JSONArray().put(jsonData).toString();
-
-        i.putExtra("messageType", "PEBBLE_ALERT");
-        i.putExtra("sender", "PebbleKit Android");
-        i.putExtra("notificationData", notificationData);
-        sendBroadcast(i);
-*/
 
     }
 
@@ -350,12 +338,23 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy(){
         PositioningManager.getInstance().removeListener(positionListener);
-        navigationManager.stop();
         map = null;
         super.onDestroy();
     }
 
+    public void stopNavigation(View view){
+        FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.startNavigationBtn);
+        floatingActionButton.show();
+        FloatingActionButton floatingActionButton1 = (FloatingActionButton) findViewById(R.id.stopNavigationBtn);
+        floatingActionButton1.hide();
+        navigationManager.stop();
+    }
+
     public void startNavigation(View view){
+        FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.startNavigationBtn);
+        floatingActionButton.hide();
+        FloatingActionButton floatingActionButton1 = (FloatingActionButton) findViewById(R.id.stopNavigationBtn);
+        floatingActionButton1.show();
         navigationManager = NavigationManager.getInstance();
 
         if(mapRoute!=null){
@@ -365,29 +364,47 @@ public class MainActivity extends AppCompatActivity {
             // start listening to position events
             navigationManager.addPositionListener(
                     new WeakReference<NavigationManager.PositionListener>(navPositionListener));
-
-            NavigationManager.Error error = navigationManager.startNavigation(mapRoute.getRoute());
+            navigationManager.setNaturalGuidanceMode(EnumSet.of(NavigationManager.NaturalGuidanceMode.JUNCTION));
+            VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
+            voiceCatalog.downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
+                @Override
+                public void onDownloadDone(VoiceCatalog.Error error) {
+                    if(error == VoiceCatalog.Error.NONE){
+                        System.out.println("Catalog successfuly downloaded");
+                    }
+                }
+            });
+            List<VoicePackage> voicePackages = VoiceCatalog.getInstance().getCatalogList();
+            long id = -1;
+            System.out.println(id);
+            for(VoicePackage voicePackage : voicePackages){
+                if(voicePackage.getMarcCode().compareToIgnoreCase("eng") == 0){
+                    if(voicePackage.isTts()){
+                        id = voicePackage.getId();
+                        break;
+                    }
+                }
+            }
+            System.out.println(id);
+            if(!voiceCatalog.isLocalVoiceSkin(id)){
+                voiceCatalog.downloadVoice(id, new VoiceCatalog.OnDownloadDoneListener() {
+                    @Override
+                    public void onDownloadDone(VoiceCatalog.Error error) {
+                        if(error == VoiceCatalog.Error.NONE){
+                            System.out.println("No error while downloading");
+                        }
+                    }
+                });
+            }
+            System.out.println(id);
+            NavigationManager.Error error = navigationManager.simulate(mapRoute.getRoute(),8);
+            if(id>=0) {
+                navigationManager.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(id));
+            }
+            System.out.println(id);
         }
-//        System.out.println(maneuverList.size());
-//        if (maneuverList.size()>0){
-//            System.out.println("dist to 0" + maneuverList.get(0).getDistanceToNextManeuver());
-//            System.out.println("turn to 0" + maneuverList.get(0).getTurn().value());
-//            System.out.println("dist to 1" + maneuverList.get(1).getDistanceToNextManeuver());
-//            System.out.println("turn to 1" + maneuverList.get(1).getTurn().value());
-//            System.out.println("dist to 2" + maneuverList.get(2).getDistanceToNextManeuver());
-//            System.out.println("turn to 2" + maneuverList.get(2).getTurn().value());
-//            System.out.println("dist to 3" + maneuverList.get(3).getDistanceToNextManeuver());
-//            System.out.println("turn to 3" + maneuverList.get(3).getTurn().value());
-//            System.out.println("dist to 4" + maneuverList.get(4).getDistanceToNextManeuver());
-//            System.out.println("turn to 4" + maneuverList.get(4).getTurn().value());
-//            System.out.println("dist to 5" + maneuverList.get(5).getDistanceToNextManeuver());
-//            System.out.println("turn to 5" + maneuverList.get(5).getTurn().value());
-//            System.out.println("dist to 6" + maneuverList.get(6).getDistanceToNextManeuver());
-//            System.out.println("turn to 6" + maneuverList.get(6).getTurn().value());
-//            System.out.println("dist to 7" + maneuverList.get(7).getDistanceToNextManeuver());
-//            System.out.println("turn to 7" + maneuverList.get(7).getTurn().value());
-//        }
     }
+
 
     private NavigationManager.NewInstructionEventListener instructListener
             = new NavigationManager.NewInstructionEventListener() {
@@ -395,7 +412,58 @@ public class MainActivity extends AppCompatActivity {
         public void onNewInstructionEvent() {
             // Interpret and present the Maneuver object as it contains
             // turn by turn navigation instructions for the user.
-            navigationManager.getNextManeuver();
+            Maneuver maneuver = navigationManager.getNextManeuver();
+            if(maneuver != null){
+                if(maneuver.getAction() == Maneuver.Action.END){
+                    System.out.println("Route Finished");
+                    FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.startNavigationBtn);
+                    floatingActionButton.show();
+                    FloatingActionButton floatingActionButton1 = (FloatingActionButton) findViewById(R.id.stopNavigationBtn);
+                    floatingActionButton1.hide();
+                }
+                if(maneuver.getAction() == Maneuver.Action.UTURN) {
+                    System.out.println(Maneuver.Action.UTURN);
+                } else {
+                    System.out.println(maneuver.getTurn());
+                    System.out.println(maneuver.getDistanceFromPreviousManeuver());
+
+                    String title = "";
+                    Maneuver.Turn turn = maneuver.getTurn();
+
+                    if(turn.toString().contains("LEFT")||turn.toString().contains("left")){
+                        title = "Turn Left";
+                    }
+                    if(turn.toString().contains("RIGHT")||turn.toString().contains("right")){
+                        title = "Turn Right";
+                    }
+                    if(turn.toString().contains("UNDEFINED")||turn.toString().contains("undefined")){
+                        title = "U-Turn";
+                    }
+                    if(turn.toString().contains("NO")||turn.toString().contains("no")){
+                        title = "Go Straight";
+                    }
+
+                    String body = "";
+                    body = "In " + maneuver.getDistanceFromPreviousManeuver() + " meters.";
+                    // Push a notification
+
+                    final Intent i = new Intent("com.getpebble.action.SEND_NOTIFICATION");
+
+                    final java.util.Map data = new HashMap();
+                    data.put("title", title);
+                    data.put("body", body);
+                    final JSONObject jsonData = new JSONObject(data);
+                    final String notificationData = new JSONArray().put(jsonData).toString();
+
+                    i.putExtra("messageType", "PEBBLE_ALERT");
+                    i.putExtra("sender", "PebbleKit Android");
+                    i.putExtra("notificationData", notificationData);
+                    sendBroadcast(i);
+
+                }
+            } else {
+                System.out.println("null maneuver");
+            }
         }
     };
     private NavigationManager.PositionListener navPositionListener
