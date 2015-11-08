@@ -29,6 +29,7 @@ public class RunningRoute {
     }
 
     public java.util.Map<DirectionEnum,List<GeoCoordinate>> getRunningRoute(GeoCoordinate geoCoordinate, double distance, DirectionEnum directionEnum){
+        System.out.println(directionEnum);
         List<GeoCoordinate> geoCoordinateList = boundingBox.getBoundingBox(geoCoordinate,distance,directionEnum);
         java.util.Map<DirectionEnum,List<GeoCoordinate>> runningMap = new HashMap<DirectionEnum,List<GeoCoordinate>>();
         runningMap.put(directionEnum,geoCoordinateList);

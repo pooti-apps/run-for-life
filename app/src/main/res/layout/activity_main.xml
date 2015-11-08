@@ -15,9 +15,9 @@
         <android.support.design.widget.AppBarLayout android:layout_height="wrap_content"
             android:layout_width="match_parent" android:theme="@style/AppTheme.AppBarOverlay">
 
-            <android.support.v7.widget.Toolbar android:id="@+id/toolbar"
-                android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary" app:popupTheme="@style/AppTheme.PopupOverlay" />
+            <!--<android.support.v7.widget.Toolbar android:id="@+id/toolbar"-->
+                <!--android:layout_width="match_parent" android:layout_height="?attr/actionBarSize"-->
+                <!--android:background="?attr/colorPrimary" app:popupTheme="@style/AppTheme.PopupOverlay" />-->
 
         </android.support.design.widget.AppBarLayout>
         <TextView
@@ -26,30 +26,53 @@
             android:layout_height="wrap_content"
             android:text="@string/textview_routecoordinates_2waypoints"
             tools:context=".MainActivity" />
-        <android.widget.Button
-            android:id="@+id/homebutton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/label_button_gohome"
-            android:onClick="goHome" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"
+                android:ems="10"
+                android:id="@+id/distanceText"
+                android:layout_weight="1" />
+
+            <Spinner
+                android:id="@+id/distanceSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <!--<android.widget.Button-->
+                <!--android:id="@+id/mileVsKmButton"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="@string/label_button_miles"-->
+                <!--android:onClick="goHome" />-->
+            <!-- UI element declaration for "Get Directions" button -->
+            <android.widget.Button
+                android:id="@+id/directionsbutton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_button_getdirections"
+                android:onClick="getDirections" />
+        </LinearLayout>
         <fragment
             class="com.here.android.mpa.mapping.MapFragment"
             android:id="@+id/mapfragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
     </LinearLayout>
-    <!-- UI element declaration for "Get Directions" button -->
-    <android.widget.Button
-        android:id="@+id/directionsbutton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/label_button_getdirections"
-        android:onClick="getDirections" />
-    <!--
-    May use the add input button later
-    <android.support.design.widget.FloatingActionButton android:id="@+id/fab"
+
+    <android.support.design.widget.FloatingActionButton android:id="@+id/navigationBtn"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start" android:layout_margin="@dimen/fab_margin"
+        android:onClick="startNavigation"/>
+
+    <android.support.design.widget.FloatingActionButton android:id="@+id/shuffleBtn"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:layout_gravity="bottom|end" android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_input_add" />
-    -->
+        android:src="@android:drawable/stat_notify_sync_noanim"
+        android:onClick="getNext"/>
+
 </android.support.design.widget.CoordinatorLayout>

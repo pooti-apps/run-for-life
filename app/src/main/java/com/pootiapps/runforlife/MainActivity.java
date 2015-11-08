@@ -17,6 +17,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,10 +30,15 @@ import com.here.android.mpa.common.Image;
 import com.here.android.mpa.common.MapEngine;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
+import com.here.android.mpa.guidance.NavigationManager;
+import com.here.android.mpa.guidance.VoiceCatalog;
+import com.here.android.mpa.guidance.VoicePackage;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapFragment;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
+import com.here.android.mpa.routing.Maneuver;
+import com.here.android.mpa.routing.Route;
 import com.here.android.mpa.routing.RouteManager;
 import com.here.android.mpa.routing.RouteOptions;
 import com.here.android.mpa.routing.RoutePlan;
@@ -40,7 +48,9 @@ import com.pootiapps.runforlife.main.RunningRoute;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import im.delight.android.location.SimpleLocation;
 
@@ -57,17 +67,30 @@ public class MainActivity extends AppCompatActivity {
     // MapRoute for this activity
     private MapRoute mapRoute = null;
 
+    private double distanceToRun = 0;
+    private double distanceToRunThresh = 0;
+    private DirectionEnum directionEnum;
 
     private SimpleLocation location;
 
-    private boolean paused;
+    private NavigationManager navigationManager = null;
+    private List<Maneuver> maneuverList = null;
+
+    private static final double METER_IN_MILE = 1609.344;
+    private static final double METER_IN_KM = 1000;
+    private static final double THRESHOLD = 200;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+
+        FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.navigationBtn);
+        floatingActionButton.setImageResource(R.drawable.maneuver_icon_48);
+
+        Spinner spinner = (Spinner) findViewById(R.id.distanceSpinner);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,R.array.distance_array,R.layout.support_simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
 
         location = new SimpleLocation(this);
 
@@ -96,14 +119,6 @@ public class MainActivity extends AppCompatActivity {
                     map.setZoomLevel(
                             (map.getMaxZoomLevel() + map.getMinZoomLevel()) / 2);
 
-//                    Image image = new Image();
-//                    try{
-//                        image.setImageResource(R.drawable.maneuver_icon_43);
-//                        MapMarker mapMarker = new MapMarker(geoCoordinate, image);
-//                        mapMarker.setVisible(true);
-//                    }catch (IOException e){
-//                        Toast.makeText(getApplicationContext(),"could not load image",Toast.LENGTH_SHORT).show();
-//                    }
 
                 } else {
                     System.out.println("ERROR : " +error.toString());
@@ -113,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
         });
         textViewResult = (TextView) findViewById(R.id.title);
         textViewResult.setText(R.string.textview_routecoordinates_2waypoints);
+        directionEnum = DirectionEnum.SE;
     }
 
     @Override
@@ -137,32 +153,17 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    // Functionality for taps of the "Go Home" button
-    public void goHome(View view) {
-        if (map != null) {
-        // Change map view to "home" coordinate and zoom level, plus
-        // eliminate any rotation or tilt
-            map.setCenter(new GeoCoordinate(location.getLatitude(), location.getLongitude(), 0.0),
-                    Map.Animation.NONE);
-            map.setZoomLevel((map.getMaxZoomLevel() + map.getMinZoomLevel()) / 2);
-            map.setOrientation(0);
-            map.setTilt(0);
-        // Reset the map scheme to the initial scheme
-        }
-        map.setMapScheme(initial_scheme);
-    }
-
     private RouteManager.Listener routeManagerListener =
             new RouteManager.Listener()
             {
                 public void onCalculateRouteFinished(RouteManager.Error errorCode,
                                                      List<RouteResult> result) {
                     if (errorCode == RouteManager.Error.NONE &&
+                            result.get(0).getRoute().getLength() < distanceToRunThresh &&
                             result.get(0).getRoute() != null) {
-                        // how many routes calculated?
-                        System.out.println(result.size());
 
                         // create a map route object and place it on the map
+
                         mapRoute = new MapRoute(result.get(0).getRoute());
                         mapRoute.setManeuverNumberVisible(true);
                         map.addMapObject(mapRoute);
@@ -170,23 +171,73 @@ public class MainActivity extends AppCompatActivity {
                         GeoBoundingBox gbb = result.get(0).getRoute().getBoundingBox();
                         map.zoomTo(gbb, Map.Animation.LINEAR,
                                 Map.MOVE_PRESERVE_ORIENTATION);
+                        maneuverList = result.get(0).getRoute().getManeuvers();
                         textViewResult.setText(
-                                String.format("Route calculated with %d maneuvers.",
-                                        result.get(0).getRoute().getManeuvers().size()));
+                                String.format("Route calculated with %d maneuvers. Length - %d",
+                                        result.get(0).getRoute().getManeuvers().size(),result.get(0).getRoute().getLength()));
                     } else {
-                        textViewResult.setText(
-                                String.format("Route calculation failed: %s",
-                                        errorCode.toString()));
+                        int dist = result.get(0).getRoute().getLength();
+                        distanceToRun-=100;
+                        System.out.println("Total dist - "+dist+", reducing distance to " + distanceToRun);
+                        System.out.println("Direction - "+directionEnum+", changing direction to " + directionEnum.next());
+
+                        getRoute(distanceToRun);
+
+//                        textViewResult.setText(
+//                                String.format("Route calculation failed: %s",
+//                                        errorCode.toString()));
                     }
                 }
                 public void onProgress(int percentage) {
+                    StringBuilder progress = new StringBuilder();
+                    progress.append("Calculating");
+                    for(int i = 0; i < percentage%4 ; i++){
+                        progress.append(".");
+                    }
                     textViewResult.setText(
-                            String.format("... %d percent done ...", percentage));
+                            String.format(progress.toString()));
                 }
             };
 
+    public void getNext(View view){
+        Toast.makeText(this,"Shuffling",Toast.LENGTH_SHORT).show();
+        getRoute(distanceToRun);
+    }
     // Functionality for taps of the "Get Directions" button
     public void getDirections(View view) {
+        EditText editText = (EditText) findViewById(R.id.distanceText);
+        editText.clearFocus();
+        Spinner spinner = (Spinner) findViewById(R.id.distanceSpinner);
+        distanceToRun = Double.parseDouble(editText.getText().toString());
+        String spinnerText = spinner.getSelectedItem().toString();
+        int distanceMeasure = 0;
+        if(spinnerText.equalsIgnoreCase("miles")){
+            distanceMeasure = 1;
+        } else if (spinnerText.equalsIgnoreCase("kms")){
+            distanceMeasure = 2;
+        } else {
+            distanceMeasure = 3;
+        }
+        switch(distanceMeasure){
+            case 1 :
+                System.out.println("Converting "+ distanceToRun +" miles into meters.");
+                distanceToRun = distanceToRun * METER_IN_MILE;
+                System.out.println(" = "+distanceToRun +" meters");
+                break;
+            case 2 :
+                System.out.println("Converting "+ distanceToRun +" kms into meters.");
+                distanceToRun = distanceToRun * METER_IN_KM;
+                System.out.println(" = "+distanceToRun +" meters");
+                break;
+            case 3 :
+                break;
+            default: break;
+        }
+        distanceToRunThresh = distanceToRun + THRESHOLD;
+        getRoute(distanceToRun);
+    }
+
+    public void getRoute(double dist){
         // 1. clear previous results
         textViewResult.setText("");
         if (map != null && mapRoute != null) {
@@ -204,9 +255,12 @@ public class MainActivity extends AppCompatActivity {
         // 4. Select Waypoints for your routes
         // START: Nokia, Burnaby
         RunningRoute runningRoute = new RunningRoute();
-        DirectionEnum directionEnum = DirectionEnum.NW;
-        java.util.Map<DirectionEnum,List<GeoCoordinate>> routeMap = runningRoute.getRunningRoute(
-                new GeoCoordinate(location.getLatitude(), location.getLongitude()), 5000,directionEnum);
+        System.out.println("Direction before - " + directionEnum);
+        java.util.Map<DirectionEnum,List<GeoCoordinate>> routeMap = runningRoute.getNextRunningRoute(
+                new GeoCoordinate(location.getLatitude(), location.getLongitude()), distanceToRun,directionEnum);
+        Set<DirectionEnum> directionEnumSet = routeMap.keySet();
+        directionEnum = directionEnumSet.iterator().next();
+        System.out.println("Direction after - " + directionEnum);
         List<GeoCoordinate> geoCoordinateList = routeMap.get(directionEnum);
         routePlan.addWaypoint(geoCoordinateList.get(0));
         routePlan.addWaypoint(geoCoordinateList.get(1));
@@ -222,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT)
                     .show();
         }
-    };
+    }
     @Override
     protected void onResume() {
         super.onResume();
@@ -241,5 +295,27 @@ public class MainActivity extends AppCompatActivity {
         // ...
 
         super.onPause();
+    }
+
+    public void startNavigation(View view){
+        System.out.println(maneuverList.size());
+        if (maneuverList.size()>0){
+            System.out.println("dist to 0" + maneuverList.get(0).getDistanceToNextManeuver());
+            System.out.println("turn to 0" + maneuverList.get(0).getTurn().value());
+            System.out.println("dist to 1" + maneuverList.get(1).getDistanceToNextManeuver());
+            System.out.println("turn to 1" + maneuverList.get(1).getTurn().value());
+            System.out.println("dist to 2" + maneuverList.get(2).getDistanceToNextManeuver());
+            System.out.println("turn to 2" + maneuverList.get(2).getTurn().value());
+            System.out.println("dist to 3" + maneuverList.get(3).getDistanceToNextManeuver());
+            System.out.println("turn to 3" + maneuverList.get(3).getTurn().value());
+            System.out.println("dist to 4" + maneuverList.get(4).getDistanceToNextManeuver());
+            System.out.println("turn to 4" + maneuverList.get(4).getTurn().value());
+            System.out.println("dist to 5" + maneuverList.get(5).getDistanceToNextManeuver());
+            System.out.println("turn to 5" + maneuverList.get(5).getTurn().value());
+            System.out.println("dist to 6" + maneuverList.get(6).getDistanceToNextManeuver());
+            System.out.println("turn to 6" + maneuverList.get(6).getTurn().value());
+            System.out.println("dist to 7" + maneuverList.get(7).getDistanceToNextManeuver());
+            System.out.println("turn to 7" + maneuverList.get(7).getTurn().value());
+        }
     }
 }
