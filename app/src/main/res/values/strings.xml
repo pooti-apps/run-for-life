@@ -5,5 +5,8 @@
     <string name="Distance">Distance</string>
     <string name="distance_val">Enter the distance</string>
     <string name="run_btn">Run</string>
+    <string name="label_button_gohome">Go Home</string>
+    <string name="label_button_getdirections">Get Directions</string>
+    <string name="textview_routecoordinates_2waypoints">Press "Get Directions" button to calculate a route:\nStart: Nokia, Burnaby\nEnd:Airport, YVR</string>
 
 </resources>
