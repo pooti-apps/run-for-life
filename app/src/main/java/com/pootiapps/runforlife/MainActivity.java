@@ -23,6 +23,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.getpebble.android.kit.PebbleKit;
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPosition;
@@ -46,9 +47,13 @@ import com.here.android.mpa.routing.RouteResult;
 import com.pootiapps.runforlife.main.DirectionEnum;
 import com.pootiapps.runforlife.main.RunningRoute;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -311,6 +316,25 @@ public class MainActivity extends AppCompatActivity {
         // make the device update its location
         location.beginUpdates();
 
+        /*ksingh
+        boolean isConnected = PebbleKit.isWatchConnected(this);
+        Toast.makeText(this, "Pebble " + (isConnected ? "is" : "is not") + " connected!", Toast.LENGTH_LONG).show();
+        */
+        // Push a notification
+        /*
+        final Intent i = new Intent("com.getpebble.action.SEND_NOTIFICATION");
+
+        final java.util.Map data = new HashMap();
+        data.put("title", "Test Message");
+        data.put("body", "Whoever said nothing was impossible never tried to slam a revolving door.");
+        final JSONObject jsonData = new JSONObject(data);
+        final String notificationData = new JSONArray().put(jsonData).toString();
+
+        i.putExtra("messageType", "PEBBLE_ALERT");
+        i.putExtra("sender", "PebbleKit Android");
+        i.putExtra("notificationData", notificationData);
+        sendBroadcast(i);
+*/
 
     }
 
