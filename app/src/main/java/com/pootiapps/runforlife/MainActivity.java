@@ -1,23 +1,17 @@
 package com.pootiapps.runforlife;
 
-import android.Manifest;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -27,8 +21,6 @@ import com.getpebble.android.kit.PebbleKit;
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPosition;
-import com.here.android.mpa.common.Image;
-import com.here.android.mpa.common.MapEngine;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.guidance.NavigationManager;
@@ -36,7 +28,6 @@ import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoicePackage;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapFragment;
-import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.routing.Maneuver;
 import com.here.android.mpa.routing.Route;
@@ -48,28 +39,34 @@ import com.pootiapps.runforlife.main.DirectionEnum;
 import com.pootiapps.runforlife.main.RunningRoute;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.EnumSet;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+
+
 
 import im.delight.android.location.SimpleLocation;
 
 public class MainActivity extends AppCompatActivity {
 
-    // map embedded in the map fragment
     private Map map = null;
-    // map fragment embedded in this activity
     private MapFragment mapFragment = null;
-    // Initial map scheme, initialized in onCreate() and accessed in goHome()
-    private static String initial_scheme = "";
-    // TextView for displaying the current map scheme
     private TextView textViewResult = null;
-    // MapRoute for this activity
     private MapRoute mapRoute = null;
 
     private double distanceToRun = 0;
@@ -80,11 +77,11 @@ public class MainActivity extends AppCompatActivity {
     private boolean paused;
 
     private NavigationManager navigationManager = null;
-    private List<Maneuver> maneuverList = null;
 
     private static final double METER_IN_MILE = 1609.344;
     private static final double METER_IN_KM = 1000;
     private static final double THRESHOLD = 200;
+    final Context context = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +104,9 @@ public class MainActivity extends AppCompatActivity {
             SimpleLocation.openSettings(this);
         }
 
-        Toast.makeText(this, location.getLatitude() + ", " + location.getLongitude(), Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, location.getLatitude() + ", " + location.getLongitude(), Toast.LENGTH_LONG).show();
+
+        new UrlOperation().execute("");
 
         // Search for the map fragment to finish setup by calling init().
         mapFragment = (MapFragment)getFragmentManager().findFragmentById(
@@ -145,6 +144,101 @@ public class MainActivity extends AppCompatActivity {
         directionEnum = DirectionEnum.SE;
         // Register positioning listener
 
+    }
+
+    private class UrlOperation extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            StringBuilder builder = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
+            sb.append("");
+            String result = "";
+            location = new SimpleLocation(getApplicationContext());
+            try {
+                URL url = new URL("http://api.breezometer.com/baqi/?lat="+location.getLatitude()+"&lon="+location.getLongitude()+"&key=40555a34e15d4c0682a9ce14c43df31e");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                try {
+                    BufferedReader br = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+
+                    for (String line = null; (line = br.readLine()) != null;) {
+                        builder.append(line).append("\n");
+                    }
+                    JSONTokener tokener = new JSONTokener(builder.toString());
+                    //JSONArray finalResult = new JSONArray(tokener); //This is your JSON result
+                    JSONObject jsonObject = new JSONObject(tokener);
+                    if(jsonObject.optInt("breezometer_aqi")!=0
+                            && !jsonObject.optString("dominant_pollutant_canonical_name").isEmpty()
+                            && !jsonObject.optJSONObject("random_recommendations").optString("sport").isEmpty()) {
+                        //System.out.println(jsonObject.optInt("breezometer_aqi"));
+                        sb.append("Air Quality Index - " + jsonObject.optInt("breezometer_aqi"));
+                        //System.out.println(jsonObject.optString("dominant_pollutant_canonical_name"));
+                        sb.append("\nDominant polutant - " + jsonObject.optString("dominant_pollutant_canonical_name"));
+                        //System.out.println(jsonObject.optJSONObject("random_recommendations").optString("sport"));
+                        sb.append("\n" + jsonObject.optJSONObject("random_recommendations").optString("sport"));
+                    }
+
+                }catch (IOException e) {
+                    System.out.println("IOException");
+                }
+                catch(JSONException je){
+                    System.out.println("JSONException");
+                    je.printStackTrace();
+                }
+                finally{
+                    System.out.println("finally");
+                    urlConnection.disconnect();
+                }
+
+            } catch (MalformedURLException me){
+                System.out.println("MalformedURLException");
+            }
+            catch (IOException ie) {
+                System.out.println("IOException 2");
+            }
+            return sb.toString();
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            System.out.println(result);
+            final Dialog dialog = new Dialog(context);
+            dialog.setContentView(R.layout.custom);
+            Date dt = new Date();
+            String title;
+
+            Calendar calendar = GregorianCalendar.getInstance();
+            calendar.setTime(dt);
+            int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+            if (hourOfDay > 17) {
+                title = "Good Evening";
+            } else if (hourOfDay > 12) {
+                title = "Good Afternoon";
+            } else {
+                title = "Good Morning";
+            }
+            dialog.setTitle(title);
+
+            if(result.equalsIgnoreCase("")){
+                result = "We're sorry.\nWe couldn't find air quality data for your location.";
+            }
+            TextView textView = (TextView) dialog.findViewById(R.id.dialogText);
+            textView.setText(result);
+            Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
+            dialogButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialog.dismiss();
+                }
+            });
+            dialog.show();
+        }
+
+        @Override
+        protected void onPreExecute() {}
+
+        @Override
+        protected void onProgressUpdate(Void... values) {}
     }
 
 
@@ -188,21 +282,25 @@ public class MainActivity extends AppCompatActivity {
                         GeoBoundingBox gbb = result.get(0).getRoute().getBoundingBox();
                         map.zoomTo(gbb, Map.Animation.LINEAR,
                                 Map.MOVE_PRESERVE_ORIENTATION);
-                        maneuverList = result.get(0).getRoute().getManeuvers();
                         textViewResult.setText(
                                 String.format("Route calculated with %d maneuvers. Length - %d",
                                         result.get(0).getRoute().getManeuvers().size(),result.get(0).getRoute().getLength()));
                     } else {
                         int dist = result.get(0).getRoute().getLength();
-                        distanceToRun-=100;
-                        System.out.println("Total dist - "+dist+", reducing distance to " + distanceToRun);
-                        System.out.println("Direction - "+directionEnum+", changing direction to " + directionEnum.next());
-
-                        getRoute(distanceToRun);
-
-//                        textViewResult.setText(
-//                                String.format("Route calculation failed: %s",
-//                                        errorCode.toString()));
+                        if(distanceToRun < 0) {
+                        }
+                        else {
+                            if (distanceToRun < 10) {
+                                distanceToRun -= 1;
+                            } else if (distanceToRun < 100) {
+                                distanceToRun -= 10;
+                            } else {
+                                distanceToRun -= 100;
+                            }
+                            System.out.println("Total dist - " + dist + ", reducing distance to " + distanceToRun);
+                            System.out.println("Direction - " + directionEnum + ", changing direction to " + directionEnum.next());
+                            getRoute(distanceToRun);
+                        }
                     }
                 }
                 public void onProgress(int percentage) {
@@ -211,8 +309,7 @@ public class MainActivity extends AppCompatActivity {
                     for(int i = 0; i < percentage%4 ; i++){
                         progress.append(".");
                     }
-                    textViewResult.setText(
-                            String.format(progress.toString()));
+                    textViewResult.setText(progress.toString());
                 }
             };
 
@@ -236,40 +333,49 @@ public class MainActivity extends AppCompatActivity {
 
     public void getNext(View view){
         Toast.makeText(this,"Shuffling",Toast.LENGTH_SHORT).show();
-        getRoute(distanceToRun);
+        if(distanceToRun<=0){
+            Toast.makeText(this,"Please select distance and hit calculate route.",Toast.LENGTH_LONG).show();
+        }
+        else {
+            getRoute(distanceToRun);
+        }
     }
     // Functionality for taps of the "Get Directions" button
     public void getDirections(View view) {
-        EditText editText = (EditText) findViewById(R.id.distanceText);
-        editText.clearFocus();
-        Spinner spinner = (Spinner) findViewById(R.id.distanceSpinner);
-        distanceToRun = Double.parseDouble(editText.getText().toString());
-        String spinnerText = spinner.getSelectedItem().toString();
-        int distanceMeasure = 0;
-        if(spinnerText.equalsIgnoreCase("miles")){
-            distanceMeasure = 1;
-        } else if (spinnerText.equalsIgnoreCase("kms")){
-            distanceMeasure = 2;
-        } else {
-            distanceMeasure = 3;
-        }
-        switch(distanceMeasure){
-            case 1 :
-                System.out.println("Converting "+ distanceToRun +" miles into meters.");
-                distanceToRun = distanceToRun * METER_IN_MILE;
-                System.out.println(" = "+distanceToRun +" meters");
-                break;
-            case 2 :
-                System.out.println("Converting "+ distanceToRun +" kms into meters.");
-                distanceToRun = distanceToRun * METER_IN_KM;
-                System.out.println(" = "+distanceToRun +" meters");
-                break;
-            case 3 :
-                break;
-            default: break;
-        }
-        distanceToRunThresh = distanceToRun + THRESHOLD;
-        getRoute(distanceToRun);
+        try {
+            EditText editText = (EditText) findViewById(R.id.distanceText);
+            editText.clearFocus();
+            Spinner spinner = (Spinner) findViewById(R.id.distanceSpinner);
+            distanceToRun = Double.parseDouble(editText.getText().toString());
+            String spinnerText = spinner.getSelectedItem().toString();
+            int distanceMeasure;
+            if (spinnerText.equalsIgnoreCase("miles")) {
+                distanceMeasure = 1;
+            } else if (spinnerText.equalsIgnoreCase("kms")) {
+                distanceMeasure = 2;
+            } else {
+                distanceMeasure = 3;
+            }
+            switch (distanceMeasure) {
+                case 1:
+                    System.out.println("Converting " + distanceToRun + " miles into meters.");
+                    distanceToRun = distanceToRun * METER_IN_MILE;
+                    System.out.println(" = " + distanceToRun + " meters");
+                    break;
+                case 2:
+                    System.out.println("Converting " + distanceToRun + " kms into meters.");
+                    distanceToRun = distanceToRun * METER_IN_KM;
+                    System.out.println(" = " + distanceToRun + " meters");
+                    break;
+                case 3:
+                    break;
+                default:
+                    break;
+            }
+            distanceToRunThresh = distanceToRun + THRESHOLD;
+            getRoute(distanceToRun);
+        } catch (NullPointerException ne) {}
+        catch (NumberFormatException nume) {}
     }
 
     public void getRoute(double dist){
@@ -288,7 +394,6 @@ public class MainActivity extends AppCompatActivity {
         routeOptions.setRouteType(RouteOptions.Type.FASTEST);
         routePlan.setRouteOptions(routeOptions);
         // 4. Select Waypoints for your routes
-        // START: Nokia, Burnaby
         RunningRoute runningRoute = new RunningRoute();
         System.out.println("Direction before - " + directionEnum);
         java.util.Map<DirectionEnum,List<GeoCoordinate>> routeMap = runningRoute.getNextRunningRoute(
@@ -351,13 +456,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startNavigation(View view){
-        FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.startNavigationBtn);
-        floatingActionButton.hide();
-        FloatingActionButton floatingActionButton1 = (FloatingActionButton) findViewById(R.id.stopNavigationBtn);
-        floatingActionButton1.show();
-        navigationManager = NavigationManager.getInstance();
-
-        if(mapRoute!=null){
+        if(mapRoute!=null) {
+            FloatingActionButton floatingActionButton = (FloatingActionButton) findViewById(R.id.startNavigationBtn);
+            floatingActionButton.hide();
+            FloatingActionButton floatingActionButton1 = (FloatingActionButton) findViewById(R.id.stopNavigationBtn);
+            floatingActionButton1.show();
+            navigationManager = NavigationManager.getInstance();
             // start listening to navigation events
             navigationManager.addNewInstructionEventListener(
                     new WeakReference<NavigationManager.NewInstructionEventListener>(instructListener));
@@ -369,7 +473,7 @@ public class MainActivity extends AppCompatActivity {
             voiceCatalog.downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
                 @Override
                 public void onDownloadDone(VoiceCatalog.Error error) {
-                    if(error == VoiceCatalog.Error.NONE){
+                    if (error == VoiceCatalog.Error.NONE) {
                         System.out.println("Catalog successfuly downloaded");
                     }
                 }
@@ -377,31 +481,33 @@ public class MainActivity extends AppCompatActivity {
             List<VoicePackage> voicePackages = VoiceCatalog.getInstance().getCatalogList();
             long id = -1;
             System.out.println(id);
-            for(VoicePackage voicePackage : voicePackages){
-                if(voicePackage.getMarcCode().compareToIgnoreCase("eng") == 0){
-                    if(voicePackage.isTts()){
+            for (VoicePackage voicePackage : voicePackages) {
+                if (voicePackage.getMarcCode().compareToIgnoreCase("eng") == 0) {
+                    if (voicePackage.isTts()) {
                         id = voicePackage.getId();
                         break;
                     }
                 }
             }
             System.out.println(id);
-            if(!voiceCatalog.isLocalVoiceSkin(id)){
+            if (!voiceCatalog.isLocalVoiceSkin(id)) {
                 voiceCatalog.downloadVoice(id, new VoiceCatalog.OnDownloadDoneListener() {
                     @Override
                     public void onDownloadDone(VoiceCatalog.Error error) {
-                        if(error == VoiceCatalog.Error.NONE){
+                        if (error == VoiceCatalog.Error.NONE) {
                             System.out.println("No error while downloading");
                         }
                     }
                 });
             }
             System.out.println(id);
-            NavigationManager.Error error = navigationManager.simulate(mapRoute.getRoute(),8);
-            if(id>=0) {
+            NavigationManager.Error error = navigationManager.simulate(mapRoute.getRoute(), 8);
+            if (id >= 0) {
                 navigationManager.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(id));
             }
             System.out.println(id);
+        } else {
+            Toast.makeText(this,"Please select distance and hit calculate route.",Toast.LENGTH_LONG).show();
         }
     }
 
@@ -443,7 +549,7 @@ public class MainActivity extends AppCompatActivity {
                         title = "Go Straight";
                     }
 
-                    String body = "";
+                    String body;
                     body = "In " + maneuver.getDistanceFromPreviousManeuver() + " meters.";
                     // Push a notification
 
